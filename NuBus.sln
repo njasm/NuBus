@@ -1,0 +1,29 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuBus", "NuBus\NuBus.csproj", "{DCE11874-FE70-478F-B763-F80EE79E6BF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NuBusTest", "NuBusTest\NuBusTest.csproj", "{23851957-178F-4334-A8AA-1CF9E3894CD8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{DCE11874-FE70-478F-B763-F80EE79E6BF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCE11874-FE70-478F-B763-F80EE79E6BF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCE11874-FE70-478F-B763-F80EE79E6BF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCE11874-FE70-478F-B763-F80EE79E6BF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23851957-178F-4334-A8AA-1CF9E3894CD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23851957-178F-4334-A8AA-1CF9E3894CD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23851957-178F-4334-A8AA-1CF9E3894CD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23851957-178F-4334-A8AA-1CF9E3894CD8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+		$1.ResourceNamePolicy = FileFormatDefault
+	EndGlobalSection
+EndGlobal
