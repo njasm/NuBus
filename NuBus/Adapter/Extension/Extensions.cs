@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using NuBus.Util;
 
 namespace NuBus.Adapter.Extension
 {
@@ -99,6 +101,24 @@ namespace NuBus.Adapter.Extension
             {
                 throw new InvalidOperationException(
                     "An error occurred Serializing to XML.", ex);
+            }
+        }
+
+        internal static object SerializeFromXml(string value, Type t) 
+        {
+            Condition.NotNull(value);
+
+            using (TextReader reader = new StringReader(value))
+            {
+                try
+                {
+                    return new XmlSerializer(t).Deserialize(reader);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        "An error occurred Unserializing from XML.", ex);
+                }
             }
         }
     }

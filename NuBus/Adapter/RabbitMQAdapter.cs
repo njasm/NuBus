@@ -3,12 +3,16 @@ using System.Text;
 using System.Threading.Tasks;
 using NuBus.Util;
 using RabbitMQ.Client;
+using System.Threading;
 
 namespace NuBus.Adapter
 {
     using System.Collections.Concurrent;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
+    using System.Reflection;
+    using System.Xml.Serialization;
     using Extension;
     using RabbitMQ.Client.Events;
 
@@ -31,6 +35,10 @@ namespace NuBus.Adapter
 
         protected ConcurrentDictionary<string, Type>
             _handlers = new ConcurrentDictionary<string, Type>();
+
+        protected CancellationTokenSource _consumerCancellationSource;
+        protected ConcurrentDictionary<IBasicConsumer, Task>
+            _consumerTasks = new ConcurrentDictionary<IBasicConsumer, Task>();
 
         public bool IsOpen
         {
@@ -161,26 +169,78 @@ namespace NuBus.Adapter
                       arguments: null);
 
                 channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-
                 var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    var body = ea.Body;
-                    var message = Encoding.UTF8.GetString(body);
-                    // convert to object
-                    // create IBusContext
-                    // add this to IBusContext
-                    // add ea as Envelope
-                    // instantiate handler and call Handle
-                    // ack if true.
-                    channel.BasicAck(deliveryTag: ea.DeliveryTag, multiple: false);
-                };
-
                 // start consuming
-                channel.BasicConsume(queue: messages.Key,
-                                     noAck: false,
-                                     consumer: consumer);
+                var task = Task.Run(() =>
+                {
+                    consumer.Received += (model, ea) =>
+                    {
+                        var stringType = messages.Key;
+                        var body = ea.Body;
+                        var messageString = Encoding.UTF8.GetString(body);
+                        var type = GetType(stringType);
+
+                        using (TextReader reader = new StringReader(messageString))
+                        {
+                            try
+                            {
+                                var m = new XmlSerializer(type, new Type[] { type })
+                                    .Deserialize(reader);
+
+                                Type handlerType;
+                                if (!_handlers.TryGetValue(stringType, out handlerType))
+                                {
+                                    return;
+                                }
+
+                                // create IBusContext
+                                // add this to IBusContext
+                                // add ea as Envelope
+
+                                var handler = Activator.CreateInstance(handlerType);
+                                var result = (bool) handler.GetType()
+                                                    .GetMethod("Handle")
+                                                    .Invoke(handler, new[] { null, m });
+
+                                if (result)
+                                {
+                                    channel.BasicAck(deliveryTag: ea.DeliveryTag,
+                                        multiple: false);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                throw new InvalidOperationException(
+                                    "An error occurred Unserializing from XML.", ex);
+                            }
+                        }
+                    };
+
+                    channel.BasicConsume(queue: messages.Key,
+                                         noAck: false,
+                                         consumer: consumer);
+                }, _consumerCancellationSource.Token);
+
+                _consumerTasks.TryAdd(consumer, task);
             }
+        }
+
+        protected Type GetType(string typeName)
+        {
+            var type = Type.GetType(typeName);
+            if (type != null)
+            {
+                return type;
+            }
+
+            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                type = a.GetType(typeName);
+                if (type != null)
+                    return type;
+            }
+
+            return null;
         }
 
         #region StartStop
@@ -190,6 +250,8 @@ namespace NuBus.Adapter
             if (IsStarted) { return; }
 
             IsStarted = true;
+            _consumerCancellationSource = new CancellationTokenSource();
+
             var factory = new ConnectionFactory() 
             { 
                 HostName = _hostname,
@@ -209,6 +271,9 @@ namespace NuBus.Adapter
             {
                 throw new InvalidOperationException("Bus not started.");
             }
+
+            _consumerCancellationSource.Cancel();
+            Task.WaitAll(_consumerTasks.Values.ToArray());
 
             lock (_channelMutex)
             {
