@@ -31,14 +31,13 @@ namespace NuBus.Adapter
 
         protected IConnection _connection;
         protected IModel _channel;
-        protected object _channelMutex = new object();
+        protected static object _channelMutex = new object();
 
         protected ConcurrentDictionary<string, Type>
             _handlers = new ConcurrentDictionary<string, Type>();
 
-        protected CancellationTokenSource _consumerCancellationSource;
-        protected ConcurrentDictionary<IBasicConsumer, Task>
-            _consumerTasks = new ConcurrentDictionary<IBasicConsumer, Task>();
+        protected ConcurrentDictionary<string, string>
+            _consumers = new ConcurrentDictionary<string, string>();
 
         public bool IsOpen
         {
@@ -161,67 +160,70 @@ namespace NuBus.Adapter
         {
             foreach (var messages in _handlers)
             {
-                var channel = _connection.CreateModel();
-                channel.QueueDeclare(queue: messages.Key,
+                _channel.QueueDeclare(queue: messages.Key,
                       durable: true,
                       exclusive: false,
                       autoDelete: false,
                       arguments: null);
 
-                channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
-                var consumer = new EventingBasicConsumer(channel);
+                _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
+                var consumer = new EventingBasicConsumer(_channel);
+
                 // start consuming
-                var task = Task.Run(() =>
+                consumer.Received += (model, ea) =>
                 {
-                    consumer.Received += (model, ea) =>
+                    var stringType = messages.Key;
+                    var body = ea.Body;
+                    var messageString = Encoding.UTF8.GetString(body);
+                    var type = GetType(stringType);
+
+                    using (TextReader reader = new StringReader(messageString))
                     {
-                        var stringType = messages.Key;
-                        var body = ea.Body;
-                        var messageString = Encoding.UTF8.GetString(body);
-                        var type = GetType(stringType);
-
-                        using (TextReader reader = new StringReader(messageString))
+                        try
                         {
-                            try
+                            var m = new XmlSerializer(type, new Type[] { type })
+                                .Deserialize(reader);
+
+                            Type handlerType;
+                            if (!_handlers.TryGetValue(stringType, out handlerType))
                             {
-                                var m = new XmlSerializer(type, new Type[] { type })
-                                    .Deserialize(reader);
-
-                                Type handlerType;
-                                if (!_handlers.TryGetValue(stringType, out handlerType))
-                                {
-                                    return;
-                                }
-
-                                // create IBusContext
-                                // add this to IBusContext
-                                // add ea as Envelope
-
-                                var handler = Activator.CreateInstance(handlerType);
-                                var result = (bool) handler.GetType()
-                                                    .GetMethod("Handle")
-                                                    .Invoke(handler, new[] { null, m });
-
-                                if (result)
-                                {
-                                    channel.BasicAck(deliveryTag: ea.DeliveryTag,
-                                        multiple: false);
-                                }
+                                return;
                             }
-                            catch (Exception ex)
+
+                            // create IBusContext
+                            // add this to IBusContext
+                            // add ea as Envelope
+
+                            var handler = Activator.CreateInstance(handlerType);
+                            var result = (bool)handler
+                                .GetType()
+                                .GetMethod("Handle")
+                                .Invoke(handler, new[] { null, m });
+
+                            if (result)
                             {
-                                throw new InvalidOperationException(
-                                    "An error occurred Unserializing from XML.", ex);
+                                lock (_channelMutex)
+                                {
+                                    _channel.BasicAck(
+                                                deliveryTag: ea.DeliveryTag,
+                                                multiple: false);
+                                }
                             }
                         }
-                    };
+                        catch (Exception ex)
+                        {
+                            throw new InvalidOperationException(
+                                "An error occurred Unserializing from XML.", ex);
+                        }
+                    }
+                };
 
-                    channel.BasicConsume(queue: messages.Key,
-                                         noAck: false,
-                                         consumer: consumer);
-                }, _consumerCancellationSource.Token);
 
-                _consumerTasks.TryAdd(consumer, task);
+                var consumerKeyTag = _channel.BasicConsume(queue: messages.Key,
+                                     noAck: false,
+                                     consumer: consumer);
+
+                _consumers.TryAdd(messages.Key, consumerKeyTag);
             }
         }
 
@@ -250,8 +252,6 @@ namespace NuBus.Adapter
             if (IsStarted) { return; }
 
             IsStarted = true;
-            _consumerCancellationSource = new CancellationTokenSource();
-
             var factory = new ConnectionFactory() 
             { 
                 HostName = _hostname,
@@ -272,15 +272,16 @@ namespace NuBus.Adapter
                 throw new InvalidOperationException("Bus not started.");
             }
 
-            _consumerCancellationSource.Cancel();
-            Task.WaitAll(_consumerTasks.Values.ToArray());
-
             lock (_channelMutex)
             {
+                _consumers
+                    .ToList()
+                    .ForEach(kv => _channel.BasicCancel(kv.Value));
+
                 _channel.Close();
+                _connection.Close();
             }
 
-            _connection.Close();
             IsStarted = false;
         }
 
