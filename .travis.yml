@@ -1,5 +1,7 @@
 language: csharp
 solution: NuBus.sln
+services:
+  - rabbitmq
 install:
   - nuget restore NuBus.sln
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
