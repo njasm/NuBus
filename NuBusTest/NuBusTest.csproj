@@ -36,6 +36,7 @@
     <Compile Include="Message\PointToPointMessage.cs" />
     <Compile Include="Message\BaseMessage.cs" />
     <Compile Include="Handler\PointToPointHandler.cs" />
+    <Compile Include="BaseTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
