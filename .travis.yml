@@ -18,7 +18,7 @@ install:
   - ./configure
   - make
   - sudo make install
-  - cd ../../csMACnz/Coveralls.net-Samples
+  - cd ../../njasm/NuBus
 
 script:
   - xbuild /p:Configuration=Debug NuBus.sln
