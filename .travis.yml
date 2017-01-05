@@ -7,6 +7,7 @@ install:
   - pwd
   - nuget restore NuBus.sln
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory testrunner
+  - nuget install coveralls.net -Version 0.6.0 -OutputDirectory testrunner
   - sudo apt-get install gtk-sharp2
   - curl -sS https://api.nuget.org/packages/mono.cecil.0.9.5.4.nupkg > /tmp/mono.cecil.0.9.5.4.nupkg.zip
   - unzip /tmp/mono.cecil.0.9.5.4.nupkg.zip -d /tmp/cecil
@@ -38,4 +39,4 @@ after_success:
   - cat monocovCoverage.cov
   - ls monocovCoverage
   - monocov --export-xml=monocovCoverage monocovCoverage.cov
-  - mono ./src/packages/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --monocov -i ./monocovCoverage --repoToken $COVERALLS_REPO_TOKEN --commitId $TRAVIS_COMMIT --commitBranch $TRAVIS_BRANCH --commitAuthor "$REPO_COMMIT_AUTHOR" --commitEmail "$REPO_COMMIT_AUTHOR_EMAIL" --commitMessage "$REPO_COMMIT_MESSAGE" --jobId $TRAVIS_JOB_ID  --serviceName "travis-ci"  --useRelativePaths
+  - mono ./testrunner/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --monocov -i ./monocovCoverage --repoToken $COVERALLS_REPO_TOKEN --commitId $TRAVIS_COMMIT --commitBranch $TRAVIS_BRANCH --commitAuthor "$REPO_COMMIT_AUTHOR" --commitEmail "$REPO_COMMIT_AUTHOR_EMAIL" --commitMessage "$REPO_COMMIT_MESSAGE" --jobId $TRAVIS_JOB_ID  --serviceName "travis-ci"  --useRelativePaths
