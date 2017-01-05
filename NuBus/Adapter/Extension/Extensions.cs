@@ -12,12 +12,12 @@ namespace NuBus.Adapter.Extension
     public static class Extensions
     {
         public static IBusConfigurator UseRabbitMQ(
-            this IBusConfigurator ctg, string host, Action<IBusConfigurator> func)
+           this IBusConfigurator cfg, string host, Action<IBusConfigurator> func)
         {
-            ctg.SetBusAdapter(new RabbitMQAdapter(host));
-            func(ctg);
+            (cfg as IBusConfiguratorInternal).SetBusAdapter(new RabbitMQAdapter(host));
+            func(cfg);
 
-            return ctg;
+            return cfg;
         }
 
         public static void AsPointToPoint(
@@ -26,7 +26,7 @@ namespace NuBus.Adapter.Extension
             act(ctg);
         }
 
-        public static void RegisterAssemblyMessages(this IBusConfigurator ctg)
+        public static void RegisterAssemblyMessages(this IBusConfigurator cfg)
         {
             var baseEventType = typeof(IEvent);
             var baseCommandType = typeof(ICommand);
@@ -45,14 +45,14 @@ namespace NuBus.Adapter.Extension
                     Trace.WriteLine(
                         string.Format("Registering Event {0}", t.FullName));
                     
-                    ctg.AddEventMessage(t);
+                    (cfg as IBusConfiguratorInternal).AddEventMessage(t);
                 }
                 else if (baseCommandType.IsAssignableFrom(t))
                 {
                     Trace.WriteLine(
                         string.Format("Registering Command {0}", t.FullName));
                     
-                    ctg.AddCommandMessage(t);
+                    (cfg as IBusConfiguratorInternal).AddCommandMessage(t);
                 }
             }
         }
@@ -73,52 +73,7 @@ namespace NuBus.Adapter.Extension
 
             foreach (var h in types)
             {
-                cfg.AddHandler(h);
-            }
-        }
-
-        internal static string SerializeToXml<T>(this T value) where T : class
-        {
-            if (value == null)
-            {
-                return string.Empty;
-            }
-
-            try
-            {
-                var xmlserializer = new XmlSerializer(
-                    value.GetType(), new Type[] { value.GetType() });
-                
-                var stringWriter = new StringWriter();
-                using (var writer = XmlWriter.Create(stringWriter))
-                {
-                    xmlserializer.Serialize(writer, value);
-
-                    return stringWriter.ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidOperationException(
-                    "An error occurred Serializing to XML.", ex);
-            }
-        }
-
-        internal static object SerializeFromXml(string value, Type t) 
-        {
-            Condition.NotNull(value);
-
-            using (TextReader reader = new StringReader(value))
-            {
-                try
-                {
-                    return new XmlSerializer(t).Deserialize(reader);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        "An error occurred Unserializing from XML.", ex);
-                }
+                (cfg as IBusConfiguratorInternal).AddHandler(h);
             }
         }
     }

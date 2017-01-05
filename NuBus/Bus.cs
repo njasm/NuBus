@@ -1,22 +1,36 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Autofac;
 using NuBus.Util;
 
 namespace NuBus
 {
 	public sealed class Bus : IBus
 	{
-		readonly IBusAdapter _busAdapter;
+		IBusAdapter _busAdapter;
+        IContainer _container;
 
-		public Bus(IBusAdapter adapter)
+        public Bus()
+        {
+        }
+
+        public Bus(IBusAdapter adapter) 
+            : this()
 		{
 			Condition.NotNull(adapter);
-
 			_busAdapter = adapter;
 		}
 
+        internal void AddAdapter(IBusAdapter adapter)
+        {
+            Condition.NotNull(adapter);
+            _busAdapter = adapter;
+        }
+
+
 		public void Start()
 		{
+            Condition.NotNull(_busAdapter);
 			_busAdapter.Start();
 		}
 

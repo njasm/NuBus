@@ -5,19 +5,24 @@ using NuBus.Util;
 
 namespace NuBus
 {
-    public class BusConfigurator : IBusConfigurator
+    public sealed class BusConfigurator : IBusConfiguratorInternal, IBusConfigurator
     {
-        protected IBusAdapter _adapter;
-        protected string _username;
-        protected string _password;
+        Bus _bus;
+        IBusAdapter _adapter;
+        string _username;
+        string _password;
 
-        protected ConcurrentBag<Type> 
-            _messages = new ConcurrentBag<Type>();
+        ConcurrentDictionary<MessageType, ConcurrentBag<Type>>
+            _messages = new ConcurrentDictionary<MessageType, ConcurrentBag<Type>>();
 
-        protected ConcurrentBag<Type>
-            _handlers = new ConcurrentBag<Type>();
+        ConcurrentBag<Type> _handlers = new ConcurrentBag<Type>();
 
-        public void AddEventMessage(Type t)
+        public BusConfigurator()
+        {
+            _bus = new Bus();
+        }
+
+        void IBusConfiguratorInternal.AddEventMessage(Type t)
         {
             Condition.NotNull(t);
 
@@ -26,10 +31,10 @@ namespace NuBus
                 throw new InvalidOperationException("Event Wrong Type");
             }
 
-            _messages.Add(t);
+            AddMessage(t, MessageType.Event);
         }
 
-        public void AddCommandMessage(Type t)
+        void IBusConfiguratorInternal.AddCommandMessage(Type t)
         {
             Condition.NotNull(t);
 
@@ -38,10 +43,24 @@ namespace NuBus
                 throw new InvalidOperationException("ICommand Wrong Type");
             }
 
-            _messages.Add(t);
+            AddMessage(t, MessageType.Command);
         }
 
-        public void AddHandler(Type t)
+        internal void AddMessage(Type t, MessageType mType = MessageType.Generic)
+        { 
+            if (!_messages.ContainsKey(mType))
+            {
+                _messages[mType] = new ConcurrentBag<Type>() { t };
+
+                return;
+            }
+
+            ConcurrentBag<Type> s;
+            _messages.TryGetValue(mType, out s);
+            s.Add(t);
+        }
+
+        void IBusConfiguratorInternal.AddHandler(Type t)
         {
             Condition.NotNull(t);
 
@@ -54,11 +73,10 @@ namespace NuBus
         }
 
 
-        public IBusConfigurator SetBusAdapter(IBusAdapter adapter)
+        void IBusConfiguratorInternal.SetBusAdapter(IBusAdapter adapter)
         {
             _adapter = adapter;
-
-            return this;
+            _bus.AddAdapter(_adapter);
         }
 
         public IBusConfigurator Username(string username)
@@ -83,7 +101,7 @@ namespace NuBus
 
             _adapter.AddHandlers(new List<Type>(_handlers.ToArray()));
 
-            return new Bus(_adapter);
+            return _bus;
         }
     }
 }

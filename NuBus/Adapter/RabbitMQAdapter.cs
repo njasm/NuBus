@@ -3,7 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NuBus.Util;
 using RabbitMQ.Client;
-using System.Threading;
+using Autofac;
 
 namespace NuBus.Adapter
 {
@@ -29,6 +29,7 @@ namespace NuBus.Adapter
         protected string _username;
         protected string _password;
 
+        protected IContainer _locator;
         protected IConnection _connection;
         protected IModel _channel;
         protected static object _channelMutex = new object();
@@ -114,6 +115,8 @@ namespace NuBus.Adapter
             Condition.NotNull(handlers);
             Condition.NotEmpty(handlers);
 
+            var builder = new ContainerBuilder();
+
             foreach (var handler in handlers)
             {
                 var messageFQCN = handler.GetInterfaces()
@@ -123,9 +126,12 @@ namespace NuBus.Adapter
                     .GetGenericArguments()[0].FullName; 
                 
                 var handlerFQCN = handler.FullName;
-
                 _handlers[messageFQCN] = handler;
+
+                builder.RegisterType(handler).Named(messageFQCN, handler);
             }
+
+            _locator = builder.Build();
         }
 
         protected void DeliverMessage(
@@ -190,15 +196,12 @@ namespace NuBus.Adapter
                                 return;
                             }
 
-                            // create IBusContext
-                            // add this to IBusContext
-                            // add ea as Envelope
-
-                            var handler = Activator.CreateInstance(handlerType);
-                            var result = (bool)handler
+                            var handlerCtx = new BusContext();
+                            var handler =  _locator.ResolveNamed(stringType, handlerType);
+                            var result = (bool) handler
                                 .GetType()
                                 .GetMethod("Handle")
-                                .Invoke(handler, new[] { null, m });
+                                .Invoke(handler, new[] { handlerCtx, m });
 
                             if (result)
                             {

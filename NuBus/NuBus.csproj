@@ -52,6 +52,9 @@
     <Compile Include="Adapter\Extension\Extensions.cs" />
     <Compile Include="IBusConfigurator.cs" />
     <Compile Include="BusConfigurator.cs" />
+    <Compile Include="BusContext.cs" />
+    <Compile Include="Adapter\Extension\XMLSerializerExtensions.cs" />
+    <Compile Include="MessageType.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />
