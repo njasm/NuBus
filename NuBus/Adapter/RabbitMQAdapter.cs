@@ -18,6 +18,9 @@ namespace NuBus.Adapter
 
     public class RabbitMQAdapter : IBusAdapter, IDisposable
     {
+
+        public event EventHandler<MessageReceivedArgs> HandleMessageReceived;
+
         protected bool _isStarted;
         public bool IsStarted
         {
@@ -33,6 +36,9 @@ namespace NuBus.Adapter
         protected IConnection _connection;
         protected IModel _channel;
         protected static object _channelMutex = new object();
+
+        protected ConcurrentDictionary<Guid, Tuple<EventingBasicConsumer, BasicDeliverEventArgs>>
+            _deliveringMessages = new ConcurrentDictionary<Guid, Tuple<EventingBasicConsumer, BasicDeliverEventArgs>>();
 
         protected ConcurrentDictionary<string, Type>
             _handlers = new ConcurrentDictionary<string, Type>();
@@ -110,30 +116,6 @@ namespace NuBus.Adapter
             return await Task.Run(() => Send(CommandMessage));
         }
 
-        public void AddHandlers(List<Type> handlers)
-        {
-            Condition.NotNull(handlers);
-            Condition.NotEmpty(handlers);
-
-            var builder = new ContainerBuilder();
-
-            foreach (var handler in handlers)
-            {
-                var messageFQCN = handler.GetInterfaces()
-                    .FirstOrDefault(x =>
-                        x.IsGenericType
-                        && x.GetGenericTypeDefinition() == typeof(IHandler<>))
-                    .GetGenericArguments()[0].FullName; 
-                
-                var handlerFQCN = handler.FullName;
-                _handlers[messageFQCN] = handler;
-
-                builder.RegisterType(handler).Named(messageFQCN, handler);
-            }
-
-            _locator = builder.Build();
-        }
-
         protected void DeliverMessage(
             string channelQueue, string serializedMessage)
         {
@@ -174,51 +156,19 @@ namespace NuBus.Adapter
 
                 _channel.BasicQos(prefetchSize: 0, prefetchCount: 1, global: false);
                 var consumer = new EventingBasicConsumer(_channel);
-
-                // start consuming
                 consumer.Received += (model, ea) =>
                 {
                     var stringType = messages.Key;
                     var body = ea.Body;
                     var messageString = Encoding.UTF8.GetString(body);
-                    var type = GetType(stringType);
+                    var args = new MessageReceivedArgs(messageKey: stringType,
+                                                       serializedMessage: messageString,
+                                                       messageID: Guid.NewGuid());
 
-                    using (TextReader reader = new StringReader(messageString))
-                    {
-                        try
-                        {
-                            var m = new XmlSerializer(type, new Type[] { type })
-                                .Deserialize(reader);
+                    var t = new Tuple<EventingBasicConsumer, BasicDeliverEventArgs>((EventingBasicConsumer)model, ea);
+                    _deliveringMessages.TryAdd(args.MessageID, t);
 
-                            Type handlerType;
-                            if (!_handlers.TryGetValue(stringType, out handlerType))
-                            {
-                                return;
-                            }
-
-                            var handlerCtx = new BusContext();
-                            var handler =  _locator.ResolveNamed(stringType, handlerType);
-                            var result = (bool) handler
-                                .GetType()
-                                .GetMethod("Handle")
-                                .Invoke(handler, new[] { handlerCtx, m });
-
-                            if (result)
-                            {
-                                lock (_channelMutex)
-                                {
-                                    _channel.BasicAck(
-                                                deliveryTag: ea.DeliveryTag,
-                                                multiple: false);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            throw new InvalidOperationException(
-                                "An error occurred Unserializing from XML.", ex);
-                        }
-                    }
+                    OnMessageReceived(args);
                 };
 
 
@@ -230,22 +180,64 @@ namespace NuBus.Adapter
             }
         }
 
-        protected Type GetType(string typeName)
+        public void AddHandlers(List<Type> handlers)
         {
-            var type = Type.GetType(typeName);
-            if (type != null)
+            Condition.NotNull(handlers);
+            Condition.NotEmpty(handlers);
+
+            var builder = new ContainerBuilder();
+
+            foreach (var handler in handlers)
             {
-                return type;
+                var messageFQCN = handler.GetInterfaces()
+                    .FirstOrDefault(x =>
+                        x.IsGenericType
+                        && x.GetGenericTypeDefinition() == typeof(IHandler<>))
+                    .GetGenericArguments()[0].FullName;
+
+                var handlerFQCN = handler.FullName;
+                _handlers[messageFQCN] = handler;
+
+                builder.RegisterType(handler).Named(messageFQCN, handler);
             }
 
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+            _locator = builder.Build();
+        }
+        
+        public bool AcknowledgeMessage(Guid messageID)
+        {
+            Tuple<EventingBasicConsumer, BasicDeliverEventArgs> t;
+            if (!_deliveringMessages.TryGetValue(messageID, out t))
             {
-                type = a.GetType(typeName);
-                if (type != null)
-                    return type;
+                return false;
             }
 
-            return null;
+            lock (_channelMutex)
+            {
+                t.Item1.Model.BasicAck(
+                            deliveryTag: t.Item2.DeliveryTag,
+                            multiple: false);
+            }
+
+            _deliveringMessages.TryRemove(messageID, out t);
+
+            return true;
+        }
+
+        // Wrap event invocations inside a protected virtual method
+        // to allow derived classes to override the event invocation behavior
+        protected virtual void OnMessageReceived(MessageReceivedArgs e)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            EventHandler<MessageReceivedArgs> handler = HandleMessageReceived;
+
+            // Event will be null if there are no subscribers
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         #region StartStop
@@ -293,6 +285,7 @@ namespace NuBus.Adapter
         #region IDisposable Support
 
         private bool _disposedValue;
+
         protected bool IsDisposed
         {
             get { return _disposedValue; }

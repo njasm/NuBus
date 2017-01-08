@@ -16,6 +16,8 @@ namespace NuBusTest
 
 					obj.RegisterAssemblyMessages();
 					obj.RegisterAssemblyHandlers();
+
+					//obj.WithContainer(container:);
 				}
 			);
 

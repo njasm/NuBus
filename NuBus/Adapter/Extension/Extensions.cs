@@ -20,6 +20,13 @@ namespace NuBus.Adapter.Extension
             return cfg;
         }
 
+        public static IBusConfigurator WithContainer(this IBusConfigurator cfg, IContainer container)
+        {
+            (cfg as IBusConfiguratorInternal).WithContainer(container);
+
+            return cfg;
+        }
+
         public static void AsPointToPoint(
             this IBusConfigurator ctg, Action<IBusConfigurator> act)
         {

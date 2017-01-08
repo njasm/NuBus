@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using Autofac;
 using NuBus.Util;
 
 namespace NuBus
@@ -8,6 +10,7 @@ namespace NuBus
     public sealed class BusConfigurator : IBusConfiguratorInternal, IBusConfigurator
     {
         Bus _bus;
+        IContainer _container;
         IBusAdapter _adapter;
         string _username;
         string _password;
@@ -20,6 +23,11 @@ namespace NuBus
         public BusConfigurator()
         {
             _bus = new Bus();
+        }
+
+        void WithContainer(IContainer container)
+        {
+            _container = container;
         }
 
         void IBusConfiguratorInternal.AddEventMessage(Type t)
@@ -101,7 +109,64 @@ namespace NuBus
 
             _adapter.AddHandlers(new List<Type>(_handlers.ToArray()));
 
+            var b = new ContainerBuilder();
+            b.RegisterInstance(_bus).As<IBus>()
+                .AsSelf().AsImplementedInterfaces();
+
+            RegisterContainerMessages(b, _messages);
+            RegisterContainerHandlers(b, _handlers);
+
+            if (_container == null)
+            {
+                _container = b.Build();
+            }
+            else
+            {
+                b.Update(_container);
+            }
+
+            _bus.AddContainer(_container);
+            _bus.AddMessages(_messages);
+            _bus.AddHandlers(_handlers);
+
             return _bus;
+        }
+
+        private void RegisterContainerHandlers(ContainerBuilder builder, ConcurrentBag<Type> handlers)
+        {
+            Condition.NotNull(handlers);
+            Condition.NotEmpty(handlers);
+
+            foreach (var handler in handlers)
+            {
+                var messageFQCN = handler.GetInterfaces()
+                    .FirstOrDefault(x =>
+                        x.IsGenericType
+                        && x.GetGenericTypeDefinition() == typeof(IHandler<>))
+                    .GetGenericArguments()[0].FullName;
+
+                builder.RegisterType(handler).Named(handler.FullName, handler);
+            }
+        }
+
+        private void RegisterContainerMessages(
+            ContainerBuilder builder, ConcurrentDictionary<MessageType, ConcurrentBag<Type>> messages)
+        {
+            Condition.NotNull(messages);
+            Condition.NotEmpty(messages);
+
+            foreach (var message in messages)
+            {
+                foreach (var t in message.Value)
+                { 
+                    builder.RegisterType(t).Named(t.FullName, t);                    
+                }
+            }
+        }
+
+        void IBusConfiguratorInternal.WithContainer(IContainer container)
+        {
+            _container = container;
         }
     }
 }

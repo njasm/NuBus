@@ -1,4 +1,6 @@
 ﻿using System;
+using Autofac;
+
 namespace NuBus
 {
     public interface IBusConfigurator
@@ -15,6 +17,7 @@ namespace NuBus
         void AddCommandMessage(Type t);
 
         void AddHandler(Type t);
+        void WithContainer(IContainer container);
 
         void SetBusAdapter(IBusAdapter adapter);
     }

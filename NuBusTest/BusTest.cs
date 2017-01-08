@@ -70,7 +70,7 @@ namespace NuBusTest
 		{
 			var bus = GetBasicBus();
 			bus.Start();
-			Thread.Sleep(1000);
+			Thread.Sleep(3000);
 			bus.Stop();
 		}
 	}

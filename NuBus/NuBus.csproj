@@ -55,6 +55,7 @@
     <Compile Include="BusContext.cs" />
     <Compile Include="Adapter\Extension\XMLSerializerExtensions.cs" />
     <Compile Include="MessageType.cs" />
+    <Compile Include="Adapter\MessageReceivedArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />
