@@ -33,10 +33,18 @@
   <ItemGroup>
     <Compile Include="BusTest.cs" />
     <Compile Include="BusConfiguratorTest.cs" />
-    <Compile Include="Message\PointToPointMessage.cs" />
+    <Compile Include="Message\EventOne.cs" />
     <Compile Include="Message\BaseMessage.cs" />
-    <Compile Include="Handler\PointToPointHandler.cs" />
+    <Compile Include="Handler\EventOneHandler.cs" />
     <Compile Include="BaseTest.cs" />
+    <Compile Include="Message\CommandOne.cs" />
+    <Compile Include="Message\BaseCommand.cs" />
+    <Compile Include="Message\CommandTwo.cs" />
+    <Compile Include="Handler\CommandOneHandler.cs" />
+    <Compile Include="Handler\CommandTwoHandler.cs" />
+    <Compile Include="Message\BaseEvent.cs" />
+    <Compile Include="Message\EventTwo.cs" />
+    <Compile Include="Handler\EventTwoHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -27,7 +27,7 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			bus.Send(new Message.PointToPointMessage());
+			bus.Send(new Message.CommandOne());
 			bus.Stop();
 		}
 
@@ -37,7 +37,7 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			var task = bus.SendAsync(new Message.PointToPointMessage());
+			var task = bus.SendAsync(new Message.CommandTwo());
 
 			Assert.True(task.Result);
 			bus.Stop();
@@ -49,7 +49,7 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			bus.Publish(new Message.PointToPointMessage());
+			bus.Publish(new Message.EventOne());
 			bus.Stop();
 		}
 
@@ -59,7 +59,7 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			var task = bus.PublishAsync(new Message.PointToPointMessage());
+			var task = bus.PublishAsync(new Message.EventTwo());
 
 			Assert.True(task.Result);
 			bus.Stop();

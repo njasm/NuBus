@@ -3,7 +3,7 @@ using NuBus;
 
 namespace NuBusTest.Message
 {
-	public class PointToPointMessage : BaseMessage
+	public class EventOne : BaseEvent
 	{
 	}
 }

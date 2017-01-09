@@ -131,7 +131,6 @@ namespace NuBus.Adapter
 
                 var properties = _channel.CreateBasicProperties();
                 properties.Persistent = true;
-
                 _channel.BasicPublish(exchange: "",
                                       routingKey: channelQueue,
                                       basicProperties: properties,
@@ -185,8 +184,6 @@ namespace NuBus.Adapter
             Condition.NotNull(handlers);
             Condition.NotEmpty(handlers);
 
-            var builder = new ContainerBuilder();
-
             foreach (var handler in handlers)
             {
                 var messageFQCN = handler.GetInterfaces()
@@ -197,11 +194,7 @@ namespace NuBus.Adapter
 
                 var handlerFQCN = handler.FullName;
                 _handlers[messageFQCN] = handler;
-
-                builder.RegisterType(handler).Named(messageFQCN, handler);
             }
-
-            _locator = builder.Build();
         }
         
         public bool AcknowledgeMessage(Guid messageID)
@@ -215,8 +208,8 @@ namespace NuBus.Adapter
             lock (_channelMutex)
             {
                 t.Item1.Model.BasicAck(
-                            deliveryTag: t.Item2.DeliveryTag,
-                            multiple: false);
+                    deliveryTag: t.Item2.DeliveryTag,
+                    multiple: false);
             }
 
             _deliveringMessages.TryRemove(messageID, out t);
