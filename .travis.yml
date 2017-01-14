@@ -33,12 +33,12 @@ script:
   - echo $REPO_COMMIT_MESSAGE
   - echo $TRAVIS_JOB_ID
   - export LD_LIBRARY_PATH=/usr/local/lib
-  - mono --debug --profile=monocov:outfile=monocovCoverage.cov,+[NuBus] ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe ./NuBusTest/bin/Debug/NuBus.Test.dllI /noshadow
+  - mono --debug --profile=monocov:outfile=monocovCoverage.cov,+NuBus ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe ./NuBusTest/bin/Debug/NuBus.Test.dllI /noshadow
 
 after_success:
+  - monocov --export-xml=monocovCoverage monocovCoverage.cov
   - cat monocovCoverage.cov
   - ls monocovCoverage
-  - monocov --export-xml=monocovCoverage monocovCoverage.cov
   - mono ./testrunner/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --version
   - mono ./testrunner/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --help
-  - mono ./testrunner/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --monocov -i ./monocovCoverage --commitId $TRAVIS_COMMIT --commitBranch $TRAVIS_BRANCH --commitAuthor "$REPO_COMMIT_AUTHOR" --commitEmail "$REPO_COMMIT_AUTHOR_EMAIL" --commitMessage "$REPO_COMMIT_MESSAGE" --jobId $TRAVIS_JOB_ID  --serviceName "travis-ci"  --useRelativePaths
+  - mono ./testrunner/coveralls.net.0.6.0/tools/csmacnz.Coveralls.exe --monocov -i ./monocovCoverage --repoToken $COVERALLS_REPO_TOKEN --commitId $TRAVIS_COMMIT --commitBranch $TRAVIS_BRANCH --commitAuthor "$REPO_COMMIT_AUTHOR" --commitEmail "$REPO_COMMIT_AUTHOR_EMAIL" --commitMessage "$REPO_COMMIT_MESSAGE" --jobId $TRAVIS_JOB_ID  --serviceName "travis-ci"  --useRelativePaths
