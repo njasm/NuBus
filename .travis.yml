@@ -33,7 +33,7 @@ script:
   - echo $REPO_COMMIT_MESSAGE
   - echo $TRAVIS_JOB_ID
   - export LD_LIBRARY_PATH=/usr/local/lib
-  - mono --debug --profile=monocov:outfile=monocovCoverage.cov,+[NuBus] ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe ./NuBusTest/bin/Debug/NuBus.Test.dll
+  - mono --debug --profile=monocov:outfile=monocovCoverage.cov,+[NuBus] ./testrunner/NUnit.ConsoleRunner.3.5.0/tools/nunit3-console.exe ./NuBusTest/bin/Debug/NuBus.Test.dllI /noshadow
 
 after_success:
   - cat monocovCoverage.cov

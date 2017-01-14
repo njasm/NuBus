@@ -8,18 +8,18 @@ namespace NuBusTest
 	{
 		public IBus GetBasicBus(string host = "localhost", string user = "guest", string pass = "guest")
 		{
-			var ctg = (new BusConfigurator()).UseRabbitMQ(host,
-				(IBusConfigurator obj) =>
+			var ctg = new BusConfigurator();
+			ctg.UseRabbitMQ(host,
+				(IBusConfigurator obj, IEndPointConfiguration endpoint) =>
 				{
-					obj.Username(user);
-					obj.Password(pass);
+					endpoint.Username(user);
+					endpoint.Password(pass);
 
-					obj.RegisterAssemblyMessages();
-					obj.RegisterAssemblyHandlers();
-
-					//obj.WithContainer(container:);
+					endpoint.RegisterAssemblyMessages();
+					endpoint.RegisterAssemblyHandlers();
 				}
 			);
+			//ctg.WithContainer(container);
 
 			return ctg.Build();
 		}

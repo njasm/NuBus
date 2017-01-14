@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Autofac;
 using NuBus.Adapter;
+using NuBus.Service;
 using NuBus.Util;
 using RabbitMQ.Client.Events;
 
@@ -13,38 +14,27 @@ namespace NuBus
 {
 	public sealed class Bus : IBus
 	{
-		IBusAdapter _busAdapter;
         IContainer _container;
+        IEndpointService _service;
 
-        ConcurrentDictionary<MessageType, ConcurrentBag<Type>>
-            _messages = new ConcurrentDictionary<MessageType, ConcurrentBag<Type>>();
-
-        ConcurrentDictionary<string, Type>
-            _handlers = new ConcurrentDictionary<string, Type>();
-
-        public Bus()
+        public Bus(IEndpointService service)
         {
+            Condition.NotNull(service);
+            _service = service;
         }
-
-        public Bus(IBusAdapter adapter) 
-            : this()
-		{
-			Condition.NotNull(adapter);
-			_busAdapter = adapter;
-		}
 
         internal void AddAdapter(IBusAdapter adapter)
         {
-            Condition.NotNull(adapter);
-            _busAdapter = adapter;
-            _busAdapter.HandleMessageReceived += OnMessageReceived;
+            //_busAdapter.HandleMessageReceived += OnMessageReceived;
         }
 
         public void OnMessageReceived(object sender, MessageReceivedArgs e)
         {
             Type messageType = GetType(e.MessageKey);
-            Type handlerType;
-            if (!_handlers.TryGetValue(e.MessageKey, out handlerType))
+            Type handlerType = _service
+                .GetAllHandlers()
+                .FirstOrDefault(h => h.GetGenericArguments()[0].FullName == messageType.FullName);
+            if (handlerType == null)
             {
                 throw new InvalidOperationException(string.Format(
                     "No Handler Registered for handling of {0}", e.MessageKey));
@@ -67,7 +57,7 @@ namespace NuBus
                     if (result)
                     {
                         //(sender as EventingBasicConsumer).Model.BasicAck(1, false);
-                        _busAdapter.AcknowledgeMessage(e.MessageID);
+                        //_busAdapter.AcknowledgeMessage(e.MessageID);
                     }
 
                 }
@@ -97,12 +87,6 @@ namespace NuBus
             return null;
         }
 
-        internal void AddMessages(
-            ConcurrentDictionary<MessageType, ConcurrentBag<Type>> messages)
-        {
-            Condition.NotNull(messages);
-            _messages = messages;
-        }
 
         internal void AddHandlers(ConcurrentBag<Type> handlers)
         {
@@ -118,7 +102,7 @@ namespace NuBus
                     .GetGenericArguments()[0].FullName;
 
                 var handlerFQCN = handler.FullName;
-                _handlers[messageFQCN] = handler;
+                //_handlers[messageFQCN] = handler;
             }
         }
 
@@ -130,13 +114,13 @@ namespace NuBus
 
 		public void Start()
 		{
-            Condition.NotNull(_busAdapter);
-			_busAdapter.Start();
+            Condition.NotNull(_service);
+            _service.StartAll();
 		}
 
 		public void Stop()
 		{
-			_busAdapter.Stop();
+            _service.StopAll();
 		}
 
 		public async Task<bool> PublishAsync<T>(T EventMessage) 
@@ -144,7 +128,7 @@ namespace NuBus
 		{
             Condition.NotNull(Convert.ChangeType(EventMessage, typeof(T)));
 
-			return await Task.Run(() => _busAdapter.PublishAsync(EventMessage));
+			return await Task.Run(() => _service.Publish(EventMessage));
 		}
 
 		public async Task<bool> SendAsync<T>(T CommandMessage) 
@@ -152,21 +136,21 @@ namespace NuBus
 		{
             Condition.NotNull(Convert.ChangeType(CommandMessage, typeof(T)));
 
-			return await Task.Run(() => _busAdapter.SendAsync(CommandMessage));
+			return await Task.Run(() => _service.Send(CommandMessage));
 		}
 
 		public bool Publish<T>(T EventMessage) where T : IEvent
 		{
             Condition.NotNull(Convert.ChangeType(EventMessage, typeof(T)));
 
-			return _busAdapter.Publish(EventMessage);
+			return _service.Publish(EventMessage);
 		}
 
 		public bool Send<T>(T CommandMessage) where T : ICommand
 		{
             Condition.NotNull(Convert.ChangeType(CommandMessage, typeof(T)));
 
-			return _busAdapter.Send(CommandMessage);
+			return _service.Send(CommandMessage);
 		}
 	}
 }
