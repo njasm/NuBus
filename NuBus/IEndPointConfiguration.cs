@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using NuBus.Adapter;
 
 namespace NuBus
 {
     public interface IEndPointConfiguration
     {
+        event EventHandler<MessageReceivedArgs> HandleMessageReceived;
+
         void Username(string username);
         void Password(string password);
 

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using NuBus.Adapter;
 using NuBus.Util;
 
 namespace NuBus
@@ -20,6 +21,8 @@ namespace NuBus
 
         protected ConcurrentBag<Type> _handlers = new ConcurrentBag<Type>();
 
+        public event EventHandler<MessageReceivedArgs> HandleMessageReceived;
+
         public EndPointConfiguration(string hostname, IBusAdapter adapter)
         {
             Condition.NotNull(hostname);
@@ -27,7 +30,25 @@ namespace NuBus
 
             _hostname = hostname;
             _adapter = adapter;
+            _adapter.HandleMessageReceived += OnMessageReceived;
         }
+
+        // Wrap event invocations inside a protected virtual method
+        // to allow derived classes to override the event invocation behavior
+        protected virtual void OnMessageReceived(object sender, MessageReceivedArgs e)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            EventHandler<MessageReceivedArgs> handler = HandleMessageReceived;
+
+            // Event will be null if there are no subscribers
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
 
         public string GetPassword()
         {
@@ -135,8 +156,7 @@ namespace NuBus
 
         public IReadOnlyCollection<Type> GetHandlers()
         {
-            return _handlers
-                .Distinct()
+            return _handlers.Distinct()
                 .ToList().AsReadOnly();
         }
 

@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using NuBus.Adapter;
+using NuBus.Util;
 
 namespace NuBus.Service
 {
@@ -10,13 +12,27 @@ namespace NuBus.Service
         ConcurrentBag<IEndPointConfiguration> _endpoints = 
             new ConcurrentBag<IEndPointConfiguration>();
 
+        ConcurrentDictionary<Guid, Dictionary<DateTime, IEndPointConfiguration>> _deliveringMessages
+            = new ConcurrentDictionary<Guid, Dictionary<DateTime, IEndPointConfiguration>>();
+
+        public event EventHandler<MessageReceivedArgs> HandleMessageReceived;
+
         public void AddEndpoint(IEndPointConfiguration endpoint)
         {
             _endpoints.Add(endpoint);
+            endpoint.HandleMessageReceived += OnMessageReceived;
         }
 
         public void StartAll()
         {
+            _endpoints.ToList().ForEach(
+                e => 
+                    { 
+                        var h = e.GetHandlers(); 
+                        e.GetBusAdapter()
+                            .AddHandlers(h.ToList()); 
+                    });
+
             _endpoints
                 .Select(e => e.GetBusAdapter())
                 .ToList()
@@ -88,6 +104,56 @@ namespace NuBus.Service
             return handlers.AsReadOnly();
         }
 
+        public Type GetHandlerFor(string messageFQCN)
+        {
+            Condition.NotNull(messageFQCN);
+
+            return GetAllHandlers()
+                .FirstOrDefault(
+                    h => h
+                        .GetInterfaces()
+                        .Any(x =>
+                            x.IsGenericType
+                            && x.GetGenericTypeDefinition() == typeof(IHandler<>)
+                            && x.GetGenericArguments()[0].FullName == messageFQCN));
+        }
+
+        // Wrap event invocations inside a protected virtual method
+        // to allow derived classes to override the event invocation behavior
+        protected virtual void OnMessageReceived(object sender, MessageReceivedArgs e)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            EventHandler<MessageReceivedArgs> handler = HandleMessageReceived;
+
+            // Event will be null if there are no subscribers
+            if (handler != null)
+            {
+                _deliveringMessages.TryAdd(
+                    e.MessageID, 
+                    new Dictionary<DateTime, IEndPointConfiguration>()
+                    {
+                        { DateTime.Now, (IEndPointConfiguration)sender },
+                    });
+                                           
+                handler(this, e);
+            }
+        }
+
+        public void AcknowledgeMessage(Guid messageID)
+        {
+            if (_deliveringMessages.ContainsKey(messageID))
+            {
+                _deliveringMessages
+                    .First(m => m.Key == messageID)
+                    .Value.First()
+                    .Value.GetBusAdapter().AcknowledgeMessage(messageID);
+
+                Dictionary<DateTime, IEndPointConfiguration> removed;
+                _deliveringMessages.TryRemove(messageID, out removed);
+            }
+        }
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

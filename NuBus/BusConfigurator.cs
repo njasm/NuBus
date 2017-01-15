@@ -57,6 +57,7 @@ namespace NuBus
             if (_container == null)
             {
                 _container = b.Build();
+                _bus.AddContainer(_container);
             }
             else
             {

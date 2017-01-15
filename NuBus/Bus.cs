@@ -21,6 +21,7 @@ namespace NuBus
         {
             Condition.NotNull(service);
             _service = service;
+            _service.HandleMessageReceived += OnMessageReceived;
         }
 
         internal void AddAdapter(IBusAdapter adapter)
@@ -31,9 +32,7 @@ namespace NuBus
         public void OnMessageReceived(object sender, MessageReceivedArgs e)
         {
             Type messageType = GetType(e.MessageKey);
-            Type handlerType = _service
-                .GetAllHandlers()
-                .FirstOrDefault(h => h.GetGenericArguments()[0].FullName == messageType.FullName);
+            Type handlerType = _service.GetHandlerFor(e.MessageKey);
             if (handlerType == null)
             {
                 throw new InvalidOperationException(string.Format(
@@ -57,7 +56,7 @@ namespace NuBus
                     if (result)
                     {
                         //(sender as EventingBasicConsumer).Model.BasicAck(1, false);
-                        //_busAdapter.AcknowledgeMessage(e.MessageID);
+                        _service.AcknowledgeMessage(e.MessageID);
                     }
 
                 }
