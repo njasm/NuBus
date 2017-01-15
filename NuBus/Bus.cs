@@ -24,11 +24,6 @@ namespace NuBus
             _service.HandleMessageReceived += OnMessageReceived;
         }
 
-        internal void AddAdapter(IBusAdapter adapter)
-        {
-            //_busAdapter.HandleMessageReceived += OnMessageReceived;
-        }
-
         public void OnMessageReceived(object sender, MessageReceivedArgs e)
         {
             Type messageType = GetType(e.MessageKey);
@@ -55,7 +50,6 @@ namespace NuBus
 
                     if (result)
                     {
-                        //(sender as EventingBasicConsumer).Model.BasicAck(1, false);
                         _service.AcknowledgeMessage(e.MessageID);
                     }
 
@@ -101,7 +95,6 @@ namespace NuBus
                     .GetGenericArguments()[0].FullName;
 
                 var handlerFQCN = handler.FullName;
-                //_handlers[messageFQCN] = handler;
             }
         }
 
