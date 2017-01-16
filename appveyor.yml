@@ -9,10 +9,10 @@ assembly_info:
   assembly_informational_version: '{version}'
 
 before_build:
-  - nuget restore ".\NuBus\NuBus.sln"
+  - nuget restore ".\NuBus.sln"
 
 build:
-  project: .\NuBus\NuBus.sln
+  project: .\NuBus.sln
   verbosity: minimal
 
 test_script:
