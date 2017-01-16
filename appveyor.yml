@@ -10,7 +10,7 @@ assembly_info:
 
 before_build:
   - nuget restore ".\NuBus.sln"
-  -nuget install OpenCover -Version 4.6.166 -OutputDirectory .\NuBus\packages
+  - nuget install OpenCover -Version 4.6.166 -OutputDirectory .\NuBus\packages
 
 build:
   project: .\NuBus.sln
