@@ -18,7 +18,7 @@ build:
 
 test_script:
 - ps: >-
-    .\Nubus\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:nunit-console.exe "-targetargs:""NuBus\NuBusTests\bin\$env:CONFIGURATION\NuBusTests.dll"" /noshadow" -filter:"+[NuBus*]*" -output:opencoverCoverage.xml
+    .\Nubus\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:nunit-console.exe "-targetargs:""NuBusTest\bin\$env:CONFIGURATION\NuBus.Test.dll"" /noshadow" -filter:"+[NuBus*]*" -output:opencoverCoverage.xml
 
     $coveralls = (Resolve-Path "NuBus/packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
     
