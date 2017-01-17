@@ -11,7 +11,8 @@ assembly_info:
 before_build:
   - nuget restore ".\NuBus.sln"
   - nuget install OpenCover -Version 4.6.166 -OutputDirectory .\NuBus\packages
-  - dir .\packages\
+  - nuget install coveralls.net -Version 0.6.0 -OutputDirectory .\NuBus\packages
+  - dir .\packages\NUnit.3.5.0
 
 build:
   project: .\NuBus.sln
