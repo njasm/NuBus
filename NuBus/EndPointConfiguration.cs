@@ -40,12 +40,35 @@ namespace NuBus
             // Make a temporary copy of the event to avoid possibility of
             // a race condition if the last subscriber unsubscribes
             // immediately after the null check and before the event is raised.
-            EventHandler<MessageReceivedArgs> handler = HandleMessageReceived;
+            EventHandler<MessageReceivedArgs> handler;
+            lock(this) 
+            {
+                handler = HandleMessageReceived;
+            }
 
             // Event will be null if there are no subscribers
             if (handler != null)
             {
-                handler(this, e);
+                var exList = new List<Exception>();
+                handler.GetInvocationList()
+                    .ToList()
+                    .ForEach(h => 
+                    {
+                        try
+                        {
+                            (h as EventHandler<MessageReceivedArgs>)(this, e);
+                        }
+                        catch (Exception internalEx)
+                        {
+                           exList.Add(internalEx);
+                        }
+                    });
+                if (exList.Count > 0)
+                {
+                    throw new AggregateException(exList);
+                }
+
+                //handler(this, e);
             }
         }
 

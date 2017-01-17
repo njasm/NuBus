@@ -8,7 +8,6 @@ using Autofac;
 using NuBus.Adapter;
 using NuBus.Service;
 using NuBus.Util;
-using RabbitMQ.Client.Events;
 
 namespace NuBus
 {
@@ -78,24 +77,6 @@ namespace NuBus
             }
 
             return null;
-        }
-
-
-        internal void AddHandlers(ConcurrentBag<Type> handlers)
-        {
-            Condition.NotNull(handlers);
-            Condition.NotEmpty(handlers);
-
-            foreach (var handler in handlers)
-            {
-                var messageFQCN = handler.GetInterfaces()
-                    .FirstOrDefault(x =>
-                        x.IsGenericType
-                        && x.GetGenericTypeDefinition() == typeof(IHandler<>))
-                    .GetGenericArguments()[0].FullName;
-
-                var handlerFQCN = handler.FullName;
-            }
         }
 
         public void AddContainer(IContainer container)

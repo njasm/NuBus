@@ -45,6 +45,7 @@
     <Compile Include="Message\BaseEvent.cs" />
     <Compile Include="Message\EventTwo.cs" />
     <Compile Include="Handler\EventTwoHandler.cs" />
+    <Compile Include="EndPointServiceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
