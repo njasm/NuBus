@@ -11,7 +11,7 @@ assembly_info:
 before_build:
   - nuget restore ".\NuBus.sln"
   - nuget install OpenCover -Version 4.6.166 -OutputDirectory .\NuBus\packages
-  - dir .\Nubus\packages\
+  - dir .\packages\
 
 build:
   project: .\NuBus.sln
@@ -19,7 +19,7 @@ build:
 
 test_script:
 - ps: >-
-    .\Nubus\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:.\Nubus\packages\NUnit.3.5.0\tools\nunit-console.exe "-targetargs:""NuBusTest\bin\$env:CONFIGURATION\NuBus.Test.dll"" /noshadow" -filter:"+[NuBus*]*" -output:opencoverCoverage.xml
+    .\Nubus\packages\OpenCover.4.6.166\tools\OpenCover.Console.exe -register:user -target:.\packages\NUnit.3.5.0\tools\nunit-console.exe "-targetargs:""NuBusTest\bin\$env:CONFIGURATION\NuBus.Test.dll"" /noshadow" -filter:"+[NuBus*]*" -output:opencoverCoverage.xml
 
     $coveralls = (Resolve-Path "NuBus/packages/coveralls.net.*/tools/csmacnz.coveralls.exe").ToString()
     
