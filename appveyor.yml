@@ -15,7 +15,7 @@ before_build:
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory .\NuBus\packages
   - choco install rabbitmq --ignoredependencies -y
   - refreshenv
-  - rabbitmq-service.bat start
+  - C:\Program Files\RabbitMQ Server\rabbitmq_server-3.6.3\sbin\rabbitmq-service.bat start
   #- type C:\ProgramData\chocolatey\logs\chocolatey.log
 
 build:
