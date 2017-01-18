@@ -52,8 +52,8 @@ namespace NuBus.Service
             _endpoints
                 .Where(e => e.GetMessages().Any(t => t.FullName == typeof(T).FullName))
                 .Select(e => e.GetBusAdapter())
-                .ToList()
-                .ForEach(a => a.Publish(message));
+                .AsParallel()
+                .ForAll(a => a.Publish(message));
 
             return true;
         }
@@ -63,8 +63,8 @@ namespace NuBus.Service
             _endpoints
                 .Where(e => e.GetMessages().Any(t => t.FullName == typeof(T).FullName))
                 .Select(e => e.GetBusAdapter())
-                .ToList()
-                .ForEach(a => a.Send(message));
+                .AsParallel()
+                .ForAll(a => a.Send(message));
 
             return true;
         }

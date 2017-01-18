@@ -92,12 +92,6 @@ namespace NuBus.Adapter
             return true;
         }
 
-        public async Task<bool> PublishAsync<TEvent>(TEvent EventMessage) 
-            where TEvent : IEvent
-        {
-            return await Task.Run(() => Publish(EventMessage));
-        }
-
         public bool Send<TCommand>(TCommand CommandMessage) 
             where TCommand : ICommand
         {
@@ -108,12 +102,6 @@ namespace NuBus.Adapter
             DeliverMessage(channelQueue, serialized);
 
             return true;
-        }
-
-        public async Task<bool> SendAsync<TCommand>(TCommand CommandMessage) 
-            where TCommand : ICommand
-        {
-            return await Task.Run(() => Send(CommandMessage));
         }
 
         protected void DeliverMessage(
