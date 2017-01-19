@@ -265,17 +265,16 @@ namespace NuBus.Adapter
 
         #region IDisposable Support
 
-        private bool _disposedValue;
+        private bool _disposed = false;
 
         protected bool IsDisposed
         {
-            get { return _disposedValue; }
-            set { _disposedValue = value; }
+            get { return _disposed; }
         }
                 
         protected void Dispose(bool disposing)
         {
-            if (!_disposedValue)
+            if (!_disposed)
             {
                 if (disposing)
                 {
@@ -291,7 +290,7 @@ namespace NuBus.Adapter
                     }
                 }
 
-                _disposedValue = true;
+                _disposed = true;
             }
         }
 

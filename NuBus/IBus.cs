@@ -1,8 +1,9 @@
 ﻿namespace NuBus
 {
-	using System.Threading.Tasks;
+    using System;
+    using System.Threading.Tasks;
 
-	public interface IBus
+    public interface IBus : IDisposable
 	{
 		void Start();
 		void Stop();

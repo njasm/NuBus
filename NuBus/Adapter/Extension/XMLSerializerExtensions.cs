@@ -34,23 +34,5 @@ namespace NuBus.Adapter.Extension
                     "An error occurred Serializing to XML.", ex);
             }
         }
-
-        internal static object SerializeFromXml(string value, Type t)
-        {
-            Condition.NotNull(value);
-
-            using (TextReader reader = new StringReader(value))
-            {
-                try
-                {
-                    return new XmlSerializer(t).Deserialize(reader);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        "An error occurred Unserializing from XML.", ex);
-                }
-            }
-        }
     }
 }

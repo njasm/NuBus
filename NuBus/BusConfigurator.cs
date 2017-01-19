@@ -16,7 +16,6 @@ namespace NuBus
 
         IEndpointService _service;
         IEndPointConfiguration _activeEndpoint;
-        HashSet<IEndPointConfiguration> _endpoints = new HashSet<IEndPointConfiguration>();
 
         public BusConfigurator()
         {

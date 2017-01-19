@@ -125,5 +125,28 @@ namespace NuBus
 
 			return _service.Send(CommandMessage);
 		}
-	}
+
+        #region IDisposable Support
+        private bool _disposed = false; // To detect redundant calls
+
+        void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _service.Dispose();
+                }
+
+                _disposed = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
+    }
 }

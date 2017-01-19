@@ -77,7 +77,7 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			bus.Publish(new Message.EventOne());
+			bus.Publish(new EventOne());
 			bus.Stop();
 		}
 
@@ -87,10 +87,23 @@ namespace NuBusTest
 			var bus = GetBasicBus();
 
 			bus.Start();
-			var task = bus.PublishAsync(new Message.EventTwo());
+			var task = bus.PublishAsync(new EventTwo());
 
 			Assert.True(task.Result);
 			bus.Stop();
+		}
+
+		[Test]
+		public void TestDispose()
+		{
+			using (var bus = GetBasicBus())
+			{
+				bus.Start();
+				var task = bus.PublishAsync(new EventTwo());
+
+				Assert.True(task.Result);
+				//FIXME: bus.Stop();
+			}
 		}
 
 		[TearDown]
