@@ -58,7 +58,6 @@
     <Compile Include="Adapter\MessageReceivedArgs.cs" />
     <Compile Include="IEndPointConfiguration.cs" />
     <Compile Include="EndPointConfiguration.cs" />
-    <Compile Include="Adapter\Extension\BusExtensions.cs" />
     <Compile Include="Service\IEndpointService.cs" />
     <Compile Include="Service\EndpointService.cs" />
     <Compile Include="Adapter\Extension\EndPointExtesions.cs" />
