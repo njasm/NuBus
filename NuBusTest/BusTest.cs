@@ -3,11 +3,26 @@ using System;
 namespace NuBusTest
 {
 	using System.Threading;
+	using Autofac;
 	using NuBus;
+	using Helper;
+	using Handler;
+	using Message;
 
 	[TestFixture]
 	public class BusTest : BaseTest
 	{
+		public const int SLEEP_MILLISECONDS = 1000;
+
+		[SetUp]
+		public void StartByDrainingMessages()
+		{
+			var bus = GetBasicBus();
+			bus.Start();
+			Thread.Sleep(SLEEP_MILLISECONDS);
+			bus.Stop();
+		}
+
 		[Test]
 		public void TestArgumentNullExceptionOnBusCreation()
 		{
@@ -24,11 +39,24 @@ namespace NuBusTest
 		[Test]
 		public void TestSendCommand()
 		{
-			var bus = GetBasicBus();
+			var builder = new ContainerBuilder();
+			builder
+				.RegisterType<MessageValueBag<Guid, CommandOneHandler>>()
+				.AsSelf()
+				.SingleInstance();
 
+			var container = builder.Build();
+			var bus = GetBasicBus("localhost", "guest", "guest", container);
+
+			var message = new CommandOne();
 			bus.Start();
-			bus.Send(new Message.CommandOne());
+			bus.Send(message);
+
+			Thread.Sleep(SLEEP_MILLISECONDS);
 			bus.Stop();
+
+			var bag = container.Resolve<MessageValueBag<Guid, CommandOneHandler>>();
+			Assert.AreEqual(bag.Value, message.ID);
 		}
 
 		[Test]
@@ -70,7 +98,7 @@ namespace NuBusTest
 		{
 			var bus = GetBasicBus();
 			bus.Start();
-			Thread.Sleep(3000);
+			Thread.Sleep(SLEEP_MILLISECONDS);
 			bus.Stop();
 		}
 	}

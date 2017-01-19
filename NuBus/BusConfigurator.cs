@@ -27,7 +27,6 @@ namespace NuBus
         public IBusConfigurator WithContainer(IContainer container)
         {
             _container = container;
-            _bus.AddContainer(container);
 
             return this;
         }
@@ -57,12 +56,13 @@ namespace NuBus
             if (_container == null)
             {
                 _container = b.Build();
-                _bus.AddContainer(_container);
             }
             else
             {
                 b.Update(_container);
             }
+
+            _bus.AddContainer(_container);
 
             //_bus.AddMessages(_messages);
             //_bus.AddHandlers(_handlers);

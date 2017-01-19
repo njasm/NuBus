@@ -67,8 +67,6 @@ namespace NuBus
                 {
                     throw new AggregateException(exList);
                 }
-
-                //handler(this, e);
             }
         }
 

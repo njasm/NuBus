@@ -29,6 +29,9 @@
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Autofac">
+      <HintPath>..\packages\Autofac.4.3.0\lib\net45\Autofac.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusTest.cs" />
@@ -46,6 +49,7 @@
     <Compile Include="Message\EventTwo.cs" />
     <Compile Include="Handler\EventTwoHandler.cs" />
     <Compile Include="EndPointServiceTest.cs" />
+    <Compile Include="Helper\MessageValueBag.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -59,6 +63,7 @@
   <ItemGroup>
     <Folder Include="Message\" />
     <Folder Include="Handler\" />
+    <Folder Include="Helper\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

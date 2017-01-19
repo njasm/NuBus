@@ -1,4 +1,5 @@
 ﻿using System;
+using Autofac;
 using NuBus;
 using NuBus.Adapter.Extension;
 
@@ -6,7 +7,8 @@ namespace NuBusTest
 {
 	public class BaseTest
 	{
-		public IBus GetBasicBus(string host = "localhost", string user = "guest", string pass = "guest")
+		public IBus GetBasicBus(
+			string host = "localhost", string user = "guest", string pass = "guest", IContainer container = null)
 		{
 			var ctg = new BusConfigurator();
 			ctg.UseRabbitMQ(host,
@@ -19,7 +21,11 @@ namespace NuBusTest
 					endpoint.RegisterAssemblyHandlers();
 				}
 			);
-			//ctg.WithContainer(container);
+
+			if (container != null) 
+			{
+				ctg.WithContainer(container);
+			}
 
 			return ctg.Build();
 		}
