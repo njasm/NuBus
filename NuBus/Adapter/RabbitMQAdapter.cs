@@ -280,12 +280,10 @@ namespace NuBus.Adapter
                 {
                     lock (_channelMutex)
                     {
-                        _channel.Close();
                         _channel.Dispose();
-                        _connection.Close();
-                        _connection.Dispose();
-
                         _channel = null;
+
+                        _connection.Dispose();
                         _connection = null;
                     }
                 }

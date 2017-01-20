@@ -26,5 +26,13 @@ namespace NuBus.Util
                 throw new ArgumentException("Enumerable is empty");
             }
         }
+
+        public static void IsTrue<T>(bool value, string exMessage) where T : Exception
+        {
+            if (!value)
+            {
+                throw (T) new Exception(exMessage);
+            }    
+        }
 	}
 }

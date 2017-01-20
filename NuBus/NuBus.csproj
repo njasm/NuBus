@@ -67,6 +67,7 @@
     <Compile Include="Service\IEndpointService.cs" />
     <Compile Include="Service\EndpointService.cs" />
     <Compile Include="Adapter\Extension\EndPointExtesions.cs" />
+    <Compile Include="Adapter\ActiveMQAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />
