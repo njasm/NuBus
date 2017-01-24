@@ -15,7 +15,7 @@ before_build:
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory .\NuBus\packages
   - choco install activemq --ignoredependencies -y
   - refreshenv
-  - C:\tools\ActiveMQ\apache-activemq-5.11.1\bin\activemq start
+  - start /B C:\tools\ActiveMQ\apache-activemq-5.11.1\bin\activemq start
   #- ps: (Get-Service -Name ActiveMQ).Status
   #- type C:\ProgramData\chocolatey\logs\chocolatey.log
 
