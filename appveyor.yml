@@ -13,9 +13,9 @@ before_build:
   - nuget install OpenCover -Version 4.6.166 -OutputDirectory .\NuBus\packages
   - nuget install coveralls.net -Version 0.6.0 -OutputDirectory .\NuBus\packages
   - nuget install NUnit.Runners -Version 3.5.0 -OutputDirectory .\NuBus\packages
-  - choco install rabbitmq --ignoredependencies -y
+  - choco install activemq --ignoredependencies -y
   - refreshenv
-  - ps: (Get-Service -Name RabbitMQ).Status
+  - ps: (Get-Service -Name ActiveMQ).Status
   #- type C:\ProgramData\chocolatey\logs\chocolatey.log
 
 build:

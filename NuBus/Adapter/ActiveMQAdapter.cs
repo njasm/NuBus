@@ -6,6 +6,7 @@ using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using NuBus.Util;
 using NuBus.Adapter.Extension;
+using System.Xml.Serialization;
 
 namespace NuBus.Adapter
 {
@@ -22,14 +23,14 @@ namespace NuBus.Adapter
             }
         }
 
-        //protected ConcurrentDictionary<Guid, Tuple<EventingBasicConsumer, BasicDeliverEventArgs>>
-        //    _deliveringMessages = new ConcurrentDictionary<Guid, Tuple<EventingBasicConsumer, BasicDeliverEventArgs>>();
+        protected ConcurrentDictionary<Guid, Tuple<IMessageConsumer, Apache.NMS.IMessage>>
+            _deliveringMessages = new ConcurrentDictionary<Guid, Tuple<IMessageConsumer, Apache.NMS.IMessage>>();
 
         protected ConcurrentDictionary<string, Type>
             _handlers = new ConcurrentDictionary<string, Type>();
 
-        protected ConcurrentDictionary<string, string>
-            _consumers = new ConcurrentDictionary<string, string>();
+        protected ConcurrentDictionary<string, IMessageConsumer>
+            _consumers = new ConcurrentDictionary<string, IMessageConsumer>();
 
         protected string _username;
         protected string _password;
@@ -54,6 +55,63 @@ namespace NuBus.Adapter
             _connection = factory.CreateConnection(_username, _password);
             _connection.Start();
             _session = _connection.CreateSession(AcknowledgementMode.IndividualAcknowledge);
+
+            RegisterHandlers();
+        }
+
+        void RegisterHandlers()
+        {
+            foreach (var handler in _handlers)
+            {
+                var destinationQueue = _session.GetQueue(handler.Key);
+                var consumer = _session.CreateConsumer(destinationQueue);
+                consumer.Listener += (Apache.NMS.IMessage message) =>
+                {
+                    var textMessage = (ITextMessage)message;
+                    var mKey = handler.Key;
+                    var serializer = textMessage.Text;
+                    var id = Guid.NewGuid();
+                    var args = new MessageReceivedArgs(mKey, serializer, id);
+
+                    var t = new Tuple<IMessageConsumer, Apache.NMS.IMessage>(null, message);
+                    _deliveringMessages.TryAdd(id, t);
+
+                    OnMessageReceived(args);
+                };
+
+                _consumers.AddOrUpdate(handler.Key, key => consumer, (key, oldConsumer) => consumer);
+            }
+        }
+
+
+        // Wrap event invocations inside a protected virtual method
+        // to allow derived classes to override the event invocation behavior
+        protected virtual void OnMessageReceived(MessageReceivedArgs e)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            EventHandler<MessageReceivedArgs> handler = HandleMessageReceived;
+
+            // Event will be null if there are no subscribers
+            if (handler != null)
+            {
+                handler(this, e);
+            }
+        }
+
+        public bool AcknowledgeMessage(Guid messageID)
+        {
+            Tuple<IMessageConsumer, Apache.NMS.IMessage> t;
+            if (!_deliveringMessages.TryGetValue(messageID, out t))
+            {
+                return false;
+            }
+
+            t.Item2.Acknowledge();
+            _deliveringMessages.TryRemove(messageID, out t);
+
+            return true;
         }
 
         public void Stop()
@@ -92,12 +150,6 @@ namespace NuBus.Adapter
                 var handlerFQCN = handler.FullName;
                 _handlers[messageFQCN] = handler;
             }
-        }
-
-        public bool AcknowledgeMessage(Guid messageID)
-        {
-            //throw new NotImplementedException();
-            return true;
         }
 
         public bool Publish<TEvent>(TEvent EventMessage) where TEvent : IEvent
@@ -139,6 +191,8 @@ namespace NuBus.Adapter
 
             // Tell the producer to send the message
             producer.Send(message);
+            producer.Close();
+            producer.Dispose();
         }
 
         #region IDisposable Support

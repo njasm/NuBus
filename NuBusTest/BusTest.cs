@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 namespace NuBusTest
 {
@@ -17,7 +17,7 @@ namespace NuBusTest
 		[SetUp]
 		public void StartByDrainingMessages()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 			bus.Start();
 			Thread.Sleep(SLEEP_MILLISECONDS);
 			bus.Stop();
@@ -32,7 +32,7 @@ namespace NuBusTest
 		[Test]
 		public void TestInstantiation()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 			Assert.IsInstanceOf(typeof(IBus), bus);
 		}
 
@@ -46,7 +46,7 @@ namespace NuBusTest
 				.SingleInstance();
 
 			var container = builder.Build();
-			var bus = GetBasicBus("localhost", "guest", "guest", container);
+			var bus = GetBasicActiveMQBus("tcp://localhost:61616", "guest", "guest", container);
 
 			var message = new CommandOne();
 			bus.Start();
@@ -62,10 +62,10 @@ namespace NuBusTest
 		[Test]
 		public void TestSendAsyncCommand()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 
 			bus.Start();
-			var task = bus.SendAsync(new Message.CommandTwo());
+			var task = bus.SendAsync(new CommandTwo());
 
 			Assert.True(task.Result);
 			bus.Stop();
@@ -74,7 +74,7 @@ namespace NuBusTest
 		[Test]
 		public void TestPublishEvent()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 
 			bus.Start();
 			bus.Publish(new EventOne());
@@ -84,7 +84,7 @@ namespace NuBusTest
 		[Test]
 		public void TestPublishAsyncEvent()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 
 			bus.Start();
 			var task = bus.PublishAsync(new EventTwo());
@@ -96,7 +96,7 @@ namespace NuBusTest
 		[Test]
 		public void TestDispose()
 		{
-			using (var bus = GetBasicBus())
+			using (var bus = GetBasicActiveMQBus())
 			{
 				bus.Start();
 				var task = bus.PublishAsync(new EventTwo());
@@ -109,7 +109,7 @@ namespace NuBusTest
 		[TearDown]
 		public void DrainMessages()
 		{
-			var bus = GetBasicBus();
+			var bus = GetBasicActiveMQBus();
 			bus.Start();
 			Thread.Sleep(SLEEP_MILLISECONDS);
 			bus.Stop();

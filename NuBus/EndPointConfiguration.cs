@@ -63,6 +63,7 @@ namespace NuBus
                            exList.Add(internalEx);
                         }
                     });
+
                 if (exList.Count > 0)
                 {
                     throw new AggregateException(exList);
