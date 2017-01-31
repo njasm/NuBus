@@ -14,7 +14,7 @@ namespace NuBusTest.Handler
 
 		public bool Handle(IBusContext ctx, EventOne Message)
 		{
-			return true;
+			return (_bus != null && _bus is IBus);
 		}
 	}
 }
