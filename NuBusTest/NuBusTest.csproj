@@ -26,11 +26,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="nunit.framework">
-      <HintPath>..\packages\NUnit.3.5.0\lib\net45\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="Autofac">
       <HintPath>..\packages\Autofac.4.3.0\lib\net45\Autofac.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.3.6.0\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +50,8 @@
     <Compile Include="Handler\EventTwoHandler.cs" />
     <Compile Include="EndPointServiceTest.cs" />
     <Compile Include="Helper\MessageValueBag.cs" />
+    <Compile Include="EndpointConfigurationTest.cs" />
+    <Compile Include="Implementation\SpyBehaviorBusAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -64,6 +66,7 @@
     <Folder Include="Message\" />
     <Folder Include="Handler\" />
     <Folder Include="Helper\" />
+    <Folder Include="Implementation\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
