@@ -2,6 +2,9 @@
 using NuBus;
 using NuBusTest.Implementation;
 using System;
+using NuBus.Adapter;
+using NuBusTest.Message;
+using NuBus.Service;
 
 namespace NuBusTest
 {
@@ -78,6 +81,45 @@ namespace NuBusTest
 				Assert.Throws<InvalidOperationException>(() => endpoint.AddHandler(typeof(IHandler<>)));
 				Assert.Throws<InvalidOperationException>(() => endpoint.AddHandler(this.GetType()));
 			});
+		}
+
+		[Test]
+		public void TestMessageReceivedEventAggregateException()
+		{
+			EventHandler<MessageReceivedArgs> handler = 
+				(sender, e) => { throw new Exception("dummy"); };
+
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			endpoint.HandleMessageReceived += handler;
+
+			Assert.Throws<AggregateException>(() => SpyAdapter.FireMessageReceivedHandlers(null));
+		}
+
+		[Test]
+		public void TestMessageReceivedNotThrowsNoHandlers()
+		{
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			var eventArgs = new MessageReceivedArgs(
+				typeof(CommandOne).FullName, string.Empty, Guid.NewGuid());
+
+			Assert.DoesNotThrow(() => SpyAdapter.FireMessageReceivedHandlers(eventArgs));
+			Assert.IsInstanceOf<EndPointConfiguration>(endpoint);
+		}
+
+		[Test]
+		public void TestMessageReceivedNotThrows()
+		{
+			bool Called = false;
+			EventHandler<MessageReceivedArgs> handler = (sender, e) => { Called = true; };
+
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			endpoint.HandleMessageReceived += handler;
+
+			var eventArgs = new MessageReceivedArgs(
+				typeof(CommandOne).FullName, string.Empty, Guid.NewGuid());
+
+			Assert.DoesNotThrow(() => SpyAdapter.FireMessageReceivedHandlers(eventArgs));
+			Assert.IsTrue(Called);
 		}
 	}
 }

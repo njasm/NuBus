@@ -73,5 +73,10 @@ namespace NuBusTest.Implementation
 			this.UsernameCalled = true;
 			return this;
 		}
+
+		public void FireMessageReceivedHandlers(MessageReceivedArgs e)
+		{
+			HandleMessageReceived(this, e);
+		}
 	}
 }
