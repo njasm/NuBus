@@ -11,20 +11,24 @@ namespace NuBus.Util
             NotNull(obj);
 		}
 
-        public static void NotNull<T>(T obj) where T : class
-        {
-            if (obj == null)
-            {
-                throw new ArgumentNullException(nameof(obj));
-            }
-        }
-
         public static void NotEmpty<T>(T obj) where T : ICollection
         {
+            NotNull(obj);
+
             if (obj.Count == 0)
             {
                 throw new ArgumentException("Enumerable is empty");
             }
+        }
+
+        public static bool IsTrue(bool value)
+        {
+            if (!value)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public static void IsTrue<T>(bool value, string exMessage) where T : Exception
@@ -33,6 +37,14 @@ namespace NuBus.Util
             {
                 throw (T) new Exception(exMessage);
             }    
+        }
+
+        public static void NotNull(object obj)
+        {
+            if (obj == null)
+            {
+                throw new ArgumentNullException(nameof(obj));
+            }
         }
 	}
 }
