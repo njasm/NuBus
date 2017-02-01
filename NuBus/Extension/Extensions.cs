@@ -1,14 +1,7 @@
 ﻿using System;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Xml;
-using System.Xml.Serialization;
-using NuBus;
-using NuBus.Util;
+using NuBus.Adapter;
 
-namespace NuBus.Adapter.Extension
+namespace NuBus.Extension
 {
     public static class Extensions
     {

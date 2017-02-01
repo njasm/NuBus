@@ -49,25 +49,25 @@
     <Compile Include="IMessage.cs" />
     <Compile Include="Util\Condition.cs" />
     <Compile Include="Adapter\RabbitMQAdapter.cs" />
-    <Compile Include="Adapter\Extension\Extensions.cs" />
     <Compile Include="IBusConfigurator.cs" />
     <Compile Include="BusConfigurator.cs" />
     <Compile Include="BusContext.cs" />
-    <Compile Include="Adapter\Extension\XMLSerializerExtensions.cs" />
     <Compile Include="MessageType.cs" />
     <Compile Include="Adapter\MessageReceivedArgs.cs" />
     <Compile Include="IEndPointConfiguration.cs" />
     <Compile Include="EndPointConfiguration.cs" />
     <Compile Include="Service\IEndpointService.cs" />
     <Compile Include="Service\EndpointService.cs" />
-    <Compile Include="Adapter\Extension\EndPointExtesions.cs" />
+    <Compile Include="Extension\EndPointExtesions.cs" />
+    <Compile Include="Extension\Extensions.cs" />
+    <Compile Include="Extension\XMLSerializerExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />
     <Folder Include="Adapter\" />
-    <Folder Include="Adapter\Extension\" />
     <Folder Include="Service\" />
     <Folder Include="Exception\" />
+    <Folder Include="Extension\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

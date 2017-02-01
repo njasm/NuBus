@@ -1,7 +1,6 @@
-﻿using System;
-using Autofac;
+﻿using Autofac;
 using NuBus;
-using NuBus.Adapter.Extension;
+using NuBus.Extension;
 
 namespace NuBusTest
 {
