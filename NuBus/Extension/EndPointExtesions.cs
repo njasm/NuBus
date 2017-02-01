@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Linq;
 
-namespace NuBus.Adapter.Extension
+namespace NuBus.Extension
 {
     public static class EndPointExtesions
     {
