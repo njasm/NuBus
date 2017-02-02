@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Autofac;
 using NuBus.Adapter;
+using NuBus.Extension;
 using NuBus.Service;
 using NuBus.Util;
 
@@ -25,58 +26,35 @@ namespace NuBus
 
         public void OnMessageReceived(object sender, MessageReceivedArgs e)
         {
-            Type messageType = GetType(e.MessageKey);
-            Type handlerType = _service.GetHandlerFor(e.MessageKey);
+            Type handlerType = _service.GetHandlerFor(e.MessageFullName);
             if (handlerType == null)
             {
                 throw new InvalidOperationException(string.Format(
-                    "No Handler Registered for handling of {0}", e.MessageKey));
+                    "No Handler Registered for handling of {0}", e.MessageFullName));
             }
 
-            using (TextReader reader = new StringReader(e.SerializedMessage))
+            try
             {
-                try
+                var obj = e.MessageSerialized.UnserializeFromXml(e.MessageFullName);
+
+                var handlerCtx = new BusContext();
+                var handler = _container.ResolveNamed(handlerType.FullName, handlerType);
+                var result = (bool)handler
+                    .GetType()
+                    .GetMethod("Handle")
+                    .Invoke(handler, new[] { handlerCtx, obj });
+
+                if (result)
                 {
-                    var m = new XmlSerializer(messageType, new Type[] { messageType })
-                        .Deserialize(reader);
-                    
-                    var handlerCtx = new BusContext();
-                    var handler = _container.ResolveNamed(handlerType.FullName, handlerType);
-                    var result = (bool)handler
-                        .GetType()
-                        .GetMethod("Handle")
-                        .Invoke(handler, new[] { handlerCtx, m });
-
-                    if (result)
-                    {
-                        _service.AcknowledgeMessage(e.MessageID);
-                    }
-
+                    _service.AcknowledgeMessage(e.MessageID);
                 }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException(
-                        "An error occurred Unserializing from XML.", ex);
-                }
-            }
-        }
 
-        Type GetType(string typeName)
-        {
-            var type = Type.GetType(typeName);
-            if (type != null)
+            }
+            catch (Exception ex)
             {
-                return type;
+                throw new InvalidOperationException(
+                    "An error occurred Unserializing from XML.", ex);
             }
-
-            foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                type = a.GetType(typeName);
-                if (type != null)
-                    return type;
-            }
-
-            return null;
         }
 
         public void AddContainer(IContainer container)

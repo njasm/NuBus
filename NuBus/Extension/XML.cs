@@ -4,11 +4,11 @@ using System.Xml;
 using System.Xml.Serialization;
 using NuBus.Util;
 
-namespace NuBus.Adapter.Extension
+namespace NuBus.Extension
 {
-    public static class XMLSerializerExtensions
+    public static class XML
     {
-        internal static string SerializeToXml<T>(this T value) where T : class
+        public static string SerializeToXml<T>(this T value) where T : class
         {
             if (value == null)
             {
@@ -32,6 +32,24 @@ namespace NuBus.Adapter.Extension
             {
                 throw new InvalidOperationException(
                     "An error occurred Serializing to XML.", ex);
+            }
+        }
+
+        public static object UnserializeFromXml(this string value, string fullName)
+        {
+            Type messageType = Reflection.GetType(fullName);
+            using (TextReader reader = new StringReader(value))
+            {
+                try
+                {
+                    return new XmlSerializer(messageType, new Type[] { messageType })
+                        .Deserialize(reader);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException(
+                        "An error occurred Unserializing from XML.", ex);
+                }
             }
         }
     }
