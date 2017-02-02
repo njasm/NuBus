@@ -148,8 +148,8 @@ namespace NuBus.Adapter
                     var stringType = messages.Key;
                     var body = ea.Body;
                     var messageString = Encoding.UTF8.GetString(body);
-                    var args = new MessageReceivedArgs(messageKey: stringType,
-                                                       serializedMessage: messageString,
+                    var args = new MessageReceivedArgs(messageFullName: stringType,
+                                                       messageSerialized: messageString,
                                                        messageID: Guid.NewGuid());
 
                     var t = new Tuple<EventingBasicConsumer, BasicDeliverEventArgs>((EventingBasicConsumer)model, ea);
