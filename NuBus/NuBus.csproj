@@ -65,8 +65,9 @@
     <Compile Include="Service\EndpointService.cs" />
     <Compile Include="Extension\EndPointExtesions.cs" />
     <Compile Include="Extension\Extensions.cs" />
-    <Compile Include="Extension\XMLSerializerExtensions.cs" />
+    <Compile Include="Extension\XML.cs" />
     <Compile Include="Adapter\ActiveMQAdapter.cs" />
+    <Compile Include="Util\Reflection.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Util\" />

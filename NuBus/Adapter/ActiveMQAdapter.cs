@@ -5,8 +5,7 @@ using System.Linq;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ;
 using NuBus.Util;
-using NuBus.Adapter.Extension;
-using System.Xml.Serialization;
+using NuBus.Extension;
 
 namespace NuBus.Adapter
 {

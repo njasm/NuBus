@@ -5,7 +5,7 @@ namespace NuBusTest
 {
 	using System.Threading;
 	using NuBus;
-	using NuBus.Adapter.Extension;
+	using NuBus.Extension;
 
 	[TestFixture]
 	public class BusConfiguratorTest : BaseTest
