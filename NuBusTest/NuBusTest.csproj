@@ -53,6 +53,7 @@
     <Compile Include="EndpointConfigurationTest.cs" />
     <Compile Include="Implementation\SpyBehaviorBusAdapter.cs" />
     <Compile Include="Util\ConditionTest.cs" />
+    <Compile Include="Extension\XMLTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -69,6 +70,7 @@
     <Folder Include="Helper\" />
     <Folder Include="Implementation\" />
     <Folder Include="Util\" />
+    <Folder Include="Extension\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
