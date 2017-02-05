@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using NuBus.Adapter;
 using NuBus.Util;
 
@@ -158,22 +159,27 @@ namespace NuBus
 
         public void ClearHandlers()
         {
-            throw new NotImplementedException();
+            Interlocked.Exchange(ref _handlers, new ConcurrentBag<Type>());
         }
 
         public void ClearMessages()
         {
-            throw new NotImplementedException();
+            _messages.Clear();
         }
 
         public Type GetHandler(Type messageHandled)
         {
-            throw new NotImplementedException();
+            Condition.NotNull(messageHandled);
+
+            return GetHandlers()
+                .FirstOrDefault(
+                    h => h.FullName == messageHandled.FullName);
         }
 
         public Type GetHandler(string messageHandledFQCN)
         {
-            throw new NotImplementedException();
+            return GetHandlers()
+                .FirstOrDefault(h => h.FullName == messageHandledFQCN);
         }
 
         public IReadOnlyCollection<Type> GetHandlers()

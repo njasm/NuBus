@@ -121,5 +121,58 @@ namespace NuBusTest
 			Assert.DoesNotThrow(() => SpyAdapter.FireMessageReceivedHandlers(eventArgs));
 			Assert.IsTrue(Called);
 		}
+
+		[Test]
+		public void TestClearMessages()
+		{
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			Assert.Multiple(() => 
+			{
+				Assert.IsEmpty(endpoint.GetMessages());
+
+				endpoint.AddMessage(typeof(CommandOne));
+				Assert.IsNotEmpty(endpoint.GetMessages());
+
+				endpoint.ClearMessages();
+				Assert.IsEmpty(endpoint.GetMessages());
+			});
+		}
+
+		[Test]
+		public void TestGetHandler()
+		{
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			Assert.Multiple(() =>
+			{
+				var handlerType = typeof(Handler.CommandOneHandler); 
+				var handleName = handlerType.FullName;
+
+				Assert.IsNull(endpoint.GetHandler(handlerType));
+
+				endpoint.AddHandler(handlerType);
+				Assert.IsNotNull(endpoint.GetHandler(handleName));
+
+				endpoint.ClearHandlers();
+				Assert.IsEmpty(endpoint.GetHandlers());
+
+				Assert.IsNull(endpoint.GetHandler(string.Empty));
+			});
+		}
+
+		[Test]
+		public void TestClearHandlers()
+		{
+			var endpoint = new EndPointConfiguration(HostName, SpyAdapter);
+			Assert.Multiple(() =>
+			{
+				Assert.IsEmpty(endpoint.GetHandlers());
+
+				endpoint.AddHandler(typeof(Handler.CommandOneHandler));
+				Assert.IsNotEmpty(endpoint.GetHandlers());
+
+				endpoint.ClearHandlers();
+				Assert.IsEmpty(endpoint.GetHandlers());
+			});
+		}
 	}
 }
